@@ -1,72 +1,100 @@
-=== Easy Events for WooCommerce ===
-Contributors: tokyographer
-Tags: woocommerce, events, custom product type, quick edit
-Requires at least: 5.5
-Tested up to: 6.3
-Requires PHP: 7.4
-Stable tag: 1.0
-License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+# Easy Events for WooCommerce
 
-Easily manage and sell event-based WooCommerce products with custom fields, taxonomy, and Quick Edit functionality.
+**Contributors:** [tokyographer](https://github.com/tokyographer)  
+**Author:** Anthony T.  
+**Tags:** WooCommerce, Events, Products, API Integration, Taxonomy  
+**Requires at least:** 5.6  
+**Tested up to:** 6.3  
+**Stable tag:** 1.0.0  
+**Requires PHP:** 7.4  
+**License:** GPLv2 or later  
+**License URI:** https://www.gnu.org/licenses/gpl-2.0.html  
 
-== Description ==
+Easily manage and display event-related data within WooCommerce. Create events as custom product types, assign locations, and extend the WooCommerce API to include event-specific metadata and categories.
 
-**Easy Events for WooCommerce** allows you to create and manage a custom product type called "Event" within WooCommerce. This plugin provides the following features:
+---
 
-- Custom WooCommerce product type: "Event".
-- Custom fields for events: Event Start Date, Event End Date, and Event Location.
-- Quick Edit support for managing event details directly in the WooCommerce product list.
-- A custom taxonomy (`event_location`) for organizing events by location.
-- Display event details on the single product page.
-- Integration with WooCommerce cart, checkout, and order emails.
+## Description
 
-== Features ==
+**Easy Events for WooCommerce** enables you to transform WooCommerce into a flexible event management system. This plugin allows you to create events as products, associate metadata like start and end dates, assign event locations, and integrate event data with WooCommerce API responses.
 
-- Add "Event" as a custom WooCommerce product type.
-- Define Event Start Date, Event End Date, and Event Location for each event.
-- Manage event details directly from the WooCommerce product list with Quick Edit.
-- Organize events using the Event Location taxonomy.
-- Display event-specific details on product pages and in emails.
-- API integration for event-specific fields in WooCommerce REST responses.
+### Key Features:
+- **Custom Event Product Type**:
+  - Create and manage events as WooCommerce products.
+  - Includes dedicated fields for event start date, end date, and location.
+  
+- **Event Location Taxonomy**:
+  - A hierarchical taxonomy (`event_location`) to classify event locations.
+  - Supports the association of `event_location` with both standard WooCommerce products and event products.
 
-== Installation ==
+- **WooCommerce API Enhancements**:
+  - Includes event metadata (start date, end date, location) in the WooCommerce product API response.
+  - Adds product categories (`product_cat`) and event data to order line items in the WooCommerce API.
 
-1. Upload the plugin folder `easy-events-for-woocommerce` to the `/wp-content/plugins/` directory.
+- **Seamless Integration**:
+  - Compatible with WooCommerce product categories, enabling category assignment for event products.
+
+- **Admin UI Enhancements**:
+  - Event-specific columns (start date, end date, and location) in the product list table.
+  - Customizable fields for event details in the WooCommerce product editor.
+
+---
+
+## Installation
+
+1. Upload the `easy-events-for-woocommerce` folder to the `/wp-content/plugins/` directory.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Navigate to WooCommerce > Products and create a new product with the type "Event".
-4. Fill out the event-specific fields (Start Date, End Date, Location) and publish.
+3. Configure your event product types and start managing events within WooCommerce.
 
-== Frequently Asked Questions ==
+---
 
-= What does this plugin do? =
-This plugin extends WooCommerce by adding a custom product type "Event" with additional fields for event management.
+## Usage
 
-= Can I use this plugin with other WooCommerce extensions? =
-Yes, this plugin is designed to integrate seamlessly with WooCommerce. It works alongside other WooCommerce extensions.
+1. **Create an Event**:
+   - Navigate to WooCommerce → Products → Add New.
+   - Select `Event` as the product type and enter event-specific metadata.
 
-= Can I add custom event locations? =
-Yes, you can manage event locations using the Event Location taxonomy.
+2. **Assign Event Locations**:
+   - Use the `Event Location` taxonomy to classify and organize your events.
 
-= Does the plugin work with REST APIs? =
-Yes, event-specific fields are included in WooCommerce REST API responses.
+3. **Check API Responses**:
+   - Query the WooCommerce REST API to retrieve event data and product categories:
+     - **Product API Endpoint**: `/wp-json/wc/v3/products/<product_id>`
+     - **Order API Endpoint**: `/wp-json/wc/v3/orders/<order_id>`
 
-== Screenshots ==
+---
 
-1. Custom product type "Event" with additional fields.
-2. Manage event details in the Quick Edit panel.
-3. Event details displayed on the WooCommerce product page.
+## Changelog
 
-== Changelog ==
+### 1.0.0
+- Initial release.
+- Added custom event product type with metadata fields for start and end dates.
+- Introduced `event_location` taxonomy for event classification.
+- Enhanced WooCommerce API responses for products and orders to include event data and categories.
+- Integrated event-specific columns into the WooCommerce admin product list table.
 
-= 1.0 =
-* Initial release.
-* Added custom product type: Event.
-* Added Quick Edit support for event details.
-* Integrated event fields into WooCommerce cart, checkout, and order emails.
-* Included REST API support for event fields.
+---
 
-== Upgrade Notice ==
+## Upgrade Notice
 
-= 1.0 =
-Initial release.
+### 1.0.0
+- Ensure WooCommerce is installed and activated before upgrading.
+
+---
+
+## Frequently Asked Questions
+
+### Q: Does this plugin work with existing WooCommerce products?
+A: Yes, the plugin adds event-specific functionality but does not interfere with standard WooCommerce product types.
+
+### Q: Can I customize event data fields?
+A: The plugin provides start date, end date, and location fields by default. You can extend the plugin for additional custom fields.
+
+### Q: How do I query event data in the API?
+A: Use WooCommerce's REST API. Event-specific metadata is included in the product and order API responses.
+
+---
+
+## License
+
+This plugin is open-source and licensed under GPLv2. See the LICENSE file for details.
