@@ -1,0 +1,25 @@
+/* Adjust Quick Edit styling */
+.inline-edit-col label {
+    font-weight: normal; /* Remove bold font */
+    display: block; /* Ensure proper alignment */
+    margin-bottom: 8px;
+}
+
+.inline-edit-col input,
+.inline-edit-col select {
+    width: 100%; /* Ensure full width */
+    padding: 6px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #fff; /* Ensure consistent background */
+}
+
+.inline-edit-col .title {
+    font-weight: normal; /* Ensure titles aren't bold */
+}
+
+.quick-edit-row label span.title {
+    font-weight: normal; /* Set font weight to normal */
+}
+
