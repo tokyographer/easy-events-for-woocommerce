@@ -1,57 +1,52 @@
 <?php
 
-if ( ! class_exists( 'EE_Event_Taxonomy' ) ) {
-
-    class EE_Event_Taxonomy {
-        public function __construct() {
-            // Hook to register taxonomies with priority 20
-            add_action( 'init', [ $this, 'register_taxonomies' ], 20 );
-
-            // Debugging association of product_cat with event
-            add_action( 'init', [ $this, 'ensure_product_cat_association' ], 20 );
-        }
-
-        /**
-         * Register taxonomies for WooCommerce products and events.
-         */
-        public function register_taxonomies() {
-            // Register the custom event_location taxonomy
-            register_taxonomy( 'event_location', [ 'product', 'event' ], [
-                'hierarchical'      => true,
-                'labels'            => [
-                    'name'              => __( 'Event Locations', 'easy-events' ),
-                    'singular_name'     => __( 'Event Location', 'easy-events' ),
-                    'search_items'      => __( 'Search Event Locations', 'easy-events' ),
-                    'all_items'         => __( 'All Event Locations', 'easy-events' ),
-                    'edit_item'         => __( 'Edit Event Location', 'easy-events' ),
-                    'update_item'       => __( 'Update Event Location', 'easy-events' ),
-                    'add_new_item'      => __( 'Add New Event Location', 'easy-events' ),
-                    'new_item_name'     => __( 'New Event Location Name', 'easy-events' ),
-                    'menu_name'         => __( 'Event Locations', 'easy-events' ),
-                ],
-                'show_ui'           => true,
-                'show_admin_column' => true,
-                'query_var'         => true,
-                'rewrite'           => [ 'slug' => 'event-location' ],
-            ] );
-
-            // Log the custom taxonomy registration
-            error_log( 'Custom taxonomy event_location registered.' );
-        }
-
-        /**
-         * Ensure product categories (product_cat) are associated with the event product type.
-         */
-        public function ensure_product_cat_association() {
-            if ( taxonomy_exists( 'product_cat' ) ) {
-                register_taxonomy_for_object_type( 'product_cat', 'event' );
-                error_log( 'product_cat successfully associated with event.' );
-            } else {
-                error_log( 'product_cat taxonomy does not exist.' );
-            }
-        }
+class EE_Event_Taxonomy {
+    public function __construct() {
+        // Hook to register the taxonomy during initialization.
+        add_action( 'init', [ $this, 'register_event_location_taxonomy' ] );
     }
 
-    // Initialize the taxonomy class
-    new EE_Event_Taxonomy();
+    /**
+     * Register the Event Location taxonomy for WooCommerce products.
+     */
+    public function register_event_location_taxonomy() {
+        $labels = [
+            'name'                       => __( 'Event Locations', 'easy-events' ),
+            'singular_name'              => __( 'Event Location', 'easy-events' ),
+            'search_items'               => __( 'Search Event Locations', 'easy-events' ),
+            'all_items'                  => __( 'All Event Locations', 'easy-events' ),
+            'parent_item'                => __( 'Parent Event Location', 'easy-events' ),
+            'parent_item_colon'          => __( 'Parent Event Location:', 'easy-events' ),
+            'edit_item'                  => __( 'Edit Event Location', 'easy-events' ),
+            'update_item'                => __( 'Update Event Location', 'easy-events' ),
+            'add_new_item'               => __( 'Add New Event Location', 'easy-events' ),
+            'new_item_name'              => __( 'New Event Location Name', 'easy-events' ),
+            'menu_name'                  => __( 'Event Locations', 'easy-events' ),
+        ];
+
+        $args = [
+            'hierarchical'          => true,  // Makes it behave like categories.
+            'labels'                => $labels,
+            'show_ui'               => true, // Enables UI in admin panel.
+            'show_admin_column'     => true, // Display as a column in product admin list.
+            'query_var'             => true, // Allows taxonomy queries.
+            'rewrite'               => [ 'slug' => 'event-location' ],
+        ];
+
+        register_taxonomy( 'event_location', 'product', $args );
+    }
+
+    /**
+     * Helper function to fetch Event Location terms.
+     *
+     * @param int $product_id The product ID.
+     * @return array Array of term names.
+     */
+    public static function get_event_location_terms( $product_id ) {
+        $terms = wp_get_post_terms( $product_id, 'event_location', [ 'fields' => 'names' ] );
+        return !is_wp_error( $terms ) && !empty( $terms ) ? $terms : [];
+    }
 }
+
+// Initialize the taxonomy.
+new EE_Event_Taxonomy();
