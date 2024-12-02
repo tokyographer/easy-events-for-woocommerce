@@ -28,6 +28,10 @@ class EE_API_Integration {
         // Add event data to the API response
         $response->data['event_data'] = $event_data;
 
+        // Log category debugging info
+    error_log( 'Product Categories for Product ID ' . $product->get_id() . ': ' . print_r( $product_categories, true ) );
+
+
         // Add product categories to the API response
         $response->data['categories'] = $product_categories;
 
