@@ -100,3 +100,26 @@ class EE_API_Integration {
         return ! empty( $terms ) ? $terms : [];
     }
 }
+
+// Add Event Organizers taxonomy to WooCommerce REST API response
+function ee_add_event_organizers_to_api($response, $product, $request) {
+    // Get the event organizers terms for the product
+    $terms = wp_get_post_terms($product->get_id(), 'event_organizer');
+    
+    if (!is_wp_error($terms) && !empty($terms)) {
+        $response->data['event_organizers'] = array_map(function($term) {
+            return [
+                'id' => $term->term_id,
+                'name' => $term->name,
+                'slug' => $term->slug,
+                'description' => $term->description,
+            ];
+        }, $terms);
+    } else {
+        $response->data['event_organizers'] = [];
+    }
+
+    return $response;
+}
+
+add_filter('woocommerce_rest_prepare_product_object', 'ee_add_event_organizers_to_api', 10, 3);
