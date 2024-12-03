@@ -22,7 +22,7 @@ Transform WooCommerce into a complete event management system. With **Easy Event
   Add events as WooCommerce products with a dedicated `Event` product type.
 
 - **Event Metadata**:  
-  Easily manage start and end dates, and assign locations using the `event_location` taxonomy.
+  Easily manage start and end dates, and assign locations using the `event_location` and `event_organizers`taxonomes.
 
 - **API Integration**:  
   - Extend WooCommerce API for products and orders to include event-specific data.
@@ -31,6 +31,7 @@ Transform WooCommerce into a complete event management system. With **Easy Event
 - **Admin Panel Enhancements**:  
   - Dropdown selector for `event_location` in the product editor.
   - Event-specific columns (start date, end date, location) in the product list table.
+  - Selection of organizers per event
 
 ---
 
