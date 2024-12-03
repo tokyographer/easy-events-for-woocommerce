@@ -117,3 +117,64 @@ add_filter('woocommerce_rest_prepare_product_object', 'ee_add_event_organizers_t
 
 // Initialize the class
 new EE_API_Integration();
+// Add custom taxonomies to WooCommerce REST API responses
+add_filter('woocommerce_rest_prepare_product_object', 'add_custom_taxonomies_to_product_api', 10, 3);
+function add_custom_taxonomies_to_product_api($response, $product, $request) {
+    // Add event_location taxonomy data
+    $event_locations = wp_get_post_terms($product->get_id(), 'event_location', ['fields' => 'names']);
+    $response->data['event_location'] = !is_wp_error($event_locations) ? $event_locations : [];
+
+    // Add event_organizers taxonomy data
+    $event_organizers = wp_get_post_terms($product->get_id(), 'event_organizer', ['fields' => 'names']);
+    $response->data['event_organizers'] = !is_wp_error($event_organizers) ? $event_organizers : [];
+
+    // Add product_cat taxonomy data
+    $product_categories = wp_get_post_terms($product->get_id(), 'product_cat', ['fields' => 'names']);
+    $response->data['product_cat'] = !is_wp_error($product_categories) ? $product_categories : [];
+
+    return $response;
+}
+
+// Save custom taxonomies during POST/PUT requests
+add_action('woocommerce_rest_insert_product_object', 'save_custom_taxonomies_in_api', 10, 3);
+function save_custom_taxonomies_in_api($product, $request, $creating) {
+    if (isset($request['event_location'])) {
+        wp_set_post_terms($product->get_id(), $request['event_location'], 'event_location');
+    }
+    if (isset($request['event_organizers'])) {
+        wp_set_post_terms($product->get_id(), $request['event_organizers'], 'event_organizer');
+    }
+    if (isset($request['product_cat'])) {
+        wp_set_post_terms($product->get_id(), $request['product_cat'], 'product_cat');
+    }
+}
+
+// Add taxonomy schema to OPTIONS requests
+add_filter('woocommerce_rest_product_schema', 'add_custom_taxonomy_schema_to_rest_api');
+function add_custom_taxonomy_schema_to_rest_api($schema) {
+    $schema['properties']['event_location'] = [
+        'description' => __('Event locations assigned to the product.', 'text-domain'),
+        'type'        => 'array',
+        'items'       => [
+            'type' => 'string',
+        ],
+        'context'     => ['view', 'edit'],
+    ];
+    $schema['properties']['event_organizers'] = [
+        'description' => __('Event organizers assigned to the product.', 'text-domain'),
+        'type'        => 'array',
+        'items'       => [
+            'type' => 'string',
+        ],
+        'context'     => ['view', 'edit'],
+    ];
+    $schema['properties']['product_cat'] = [
+        'description' => __('Product categories assigned to the product.', 'text-domain'),
+        'type'        => 'array',
+        'items'       => [
+            'type' => 'string',
+        ],
+        'context'     => ['view', 'edit'],
+    ];
+    return $schema;
+}
