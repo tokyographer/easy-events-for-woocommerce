@@ -1,25 +1,27 @@
-/* Adjust Quick Edit styling */
-.inline-edit-col label {
-    font-weight: normal; /* Remove bold font */
-    display: block; /* Ensure proper alignment */
-    margin-bottom: 8px;
+/* Reset unnecessary styles for labels */
+label.selectit {
+    display: inline-flex; /* Align input and text horizontally */
+    align-items: center; /* Ensure vertical alignment */
+    font-weight: normal; /* Match WP default label styles */
+    gap: 6px; /* Space between checkbox and text */
 }
 
-.inline-edit-col input,
-.inline-edit-col select {
-    width: 100%; /* Ensure full width */
-    padding: 6px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: #fff; /* Ensure consistent background */
+/* Specific styles for checkboxes */
+label.selectit input[type="checkbox"] {
+    margin: 0; /* Reset default browser margin */
+    vertical-align: middle; /* Ensure checkbox aligns with text */
 }
 
-.inline-edit-col .title {
-    font-weight: normal; /* Ensure titles aren't bold */
+/* Ensure list item spacing does not interfere */
+li[id^="in-product_cat-"] {
+    list-style: none; /* Remove bullet points */
+    margin-bottom: 8px; /* Add space between items */
 }
 
-.quick-edit-row label span.title {
-    font-weight: normal; /* Set font weight to normal */
+/* Ensure compatibility with WP fieldset styles */
+fieldset {
+    border: none; /* Remove any unnecessary borders */
+    padding: 0; /* Reset fieldset padding */
+    margin: 0; /* Reset fieldset margin */
+    background: transparent; /* Ensure consistency with WP admin */
 }
-
