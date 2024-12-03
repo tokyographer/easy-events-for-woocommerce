@@ -123,3 +123,30 @@ function ee_add_event_organizers_to_api($response, $product, $request) {
 }
 
 add_filter('woocommerce_rest_prepare_product_object', 'ee_add_event_organizers_to_api', 10, 3);
+
+    /**
+     * Add Event Organizers taxonomy to WooCommerce REST API product responses.
+     *
+     * @param WP_REST_Response $response The original API response.
+     * @param WC_Product $product The WooCommerce product object.
+     * @param WP_REST_Request $request The current request object.
+     * @return WP_REST_Response The modified API response.
+     */
+    public function add_event_organizers_to_product_api( $response, $product, $request ) {
+        $terms = wp_get_post_terms( $product->get_id(), 'event_organizer' );
+        if ( ! is_wp_error( $terms ) && ! empty( $terms ) ) {
+            $response->data['event_organizers'] = array_map( function ( $term ) {
+                return [
+                    'id'          => $term->term_id,
+                    'name'        => $term->name,
+                    'slug'        => $term->slug,
+                    'description' => $term->description,
+                ];
+            }, $terms );
+        } else {
+            $response->data['event_organizers'] = [];
+        }
+        return $response;
+    }
+
+    add_filter( 'woocommerce_rest_prepare_product_object', [ $this, 'add_event_organizers_to_product_api' ], 10, 3 );
