@@ -3,116 +3,107 @@
 class EE_API_Integration {
     public function __construct() {
         // Hook to include event data and categories in product API responses
-        add_filter( 'woocommerce_rest_prepare_product_object', [ $this, 'add_event_and_category_data_to_product_api' ], 10, 3 );
+        add_filter('woocommerce_rest_prepare_product_object', [$this, 'add_event_and_category_data_to_product_api'], 10, 3);
 
-        // Hook to include product categories in order API responses
-        add_filter( 'woocommerce_rest_prepare_shop_order_object', [ $this, 'add_event_and_category_data_to_order_api' ], 10, 3 );
+        // Hook to include product categories and event organizers in order API responses
+        add_filter('woocommerce_rest_prepare_shop_order_object', [$this, 'add_event_and_category_data_to_order_api'], 10, 3);
+
+        // Hook to save event organizers as metadata for order items
+        add_action('woocommerce_checkout_create_order_line_item', [$this, 'save_event_organizers_to_order_item'], 10, 4);
     }
 
     /**
-     * Add event data and product categories to WooCommerce REST API product responses.
-     *
-     * @param WP_REST_Response $response The original API response.
-     * @param WC_Product $product The WooCommerce product object.
-     * @param WP_REST_Request $request The current request object.
-     * @return WP_REST_Response The modified API response.
+     * Add event data and categories to product API response.
      */
-    public function add_event_and_category_data_to_product_api( $response, $product, $request ) {
-        // Fetch event data
+    public function add_event_and_category_data_to_product_api($response, $product, $request) {
         $event_data = [
-            'event_start_date' => $this->get_meta_data( $product->get_id(), '_event_start_date' ),
-            'event_end_date'   => $this->get_meta_data( $product->get_id(), '_event_end_date' ),
-            'event_location'   => $this->get_taxonomy_terms( $product->get_id(), 'event_location' ),
+            'event_start_date' => esc_html($this->get_meta_data($product->get_id(), '_event_start_date')),
+            'event_end_date'   => esc_html($this->get_meta_data($product->get_id(), '_event_end_date')),
+            'event_location'   => $this->sanitize_array($this->get_taxonomy_terms($product->get_id(), 'event_location'))
         ];
 
-        // Fetch product categories
-        $product_categories = $this->get_taxonomy_terms( $product->get_id(), 'product_cat' );
+        $categories = $this->sanitize_array($this->get_taxonomy_terms($product->get_id(), 'product_cat'));
+        $organizers = $this->sanitize_array($this->get_taxonomy_terms($product->get_id(), 'event_organizer'));
 
-        // Debug: Log product categories
-        error_log( 'Product API: Categories for Product ID ' . $product->get_id() . ': ' . print_r( $product_categories, true ) );
-
-        // Add event data and categories to the API response
         $response->data['event_data'] = $event_data;
-        $response->data['categories'] = $product_categories;
+        $response->data['categories'] = $categories;
+        $response->data['event_organizers'] = $organizers;
 
         return $response;
     }
 
     /**
-     * Add product categories to WooCommerce REST API order line items.
-     *
-     * @param WP_REST_Response $response The original API response.
-     * @param WC_Order $order The WooCommerce order object.
-     * @param WP_REST_Request $request The current request object.
-     * @return WP_REST_Response The modified API response.
+     * Add categories and event organizers to order API response.
      */
-    public function add_event_and_category_data_to_order_api( $response, $order, $request ) {
+    public function add_event_and_category_data_to_order_api($response, $order, $request) {
         $line_items = $response->data['line_items'];
 
-        // Iterate over line items and append product categories
-        foreach ( $line_items as &$item ) {
+        foreach ($line_items as &$item) {
             $product_id = $item['product_id'];
+            $categories = $this->sanitize_array($this->get_taxonomy_terms($product_id, 'product_cat'));
+            $organizers = $this->sanitize_array($this->get_taxonomy_terms($product_id, 'event_organizer'));
 
-            // Fetch product categories
-            $categories = $this->get_taxonomy_terms( $product_id, 'product_cat' );
-
-            // Debugging
-            error_log( 'Order API: Categories for Product ID ' . $product_id . ': ' . print_r( $categories, true ) );
-
-            // Add categories to the line item
-            $item['categories'] = ! empty( $categories ) ? $categories : [];
+            $item['categories'] = $categories;
+            $item['event_organizers'] = $organizers;
         }
 
-        // Update the response with modified line items
         $response->data['line_items'] = $line_items;
-
         return $response;
     }
 
     /**
-     * Retrieve metadata with validation.
-     *
-     * @param int $product_id The product ID.
-     * @param string $meta_key The meta key to retrieve.
-     * @return mixed|null The meta value, or null if not found.
+     * Save event organizers to order line item metadata.
      */
-    private function get_meta_data( $product_id, $meta_key ) {
-        $meta_value = get_post_meta( $product_id, $meta_key, true );
-        return ! empty( $meta_value ) ? $meta_value : null;
+    public function save_event_organizers_to_order_item($item, $cart_item_key, $values, $order) {
+        $product_id = $item->get_product_id();
+        $organizers = $this->sanitize_array($this->get_taxonomy_terms($product_id, 'event_organizer'));
+
+        if (!empty($organizers)) {
+            $item->add_meta_data('event_organizers', $organizers);
+        }
     }
 
     /**
-     * Retrieve taxonomy terms with error handling.
-     *
-     * @param int $product_id The product ID.
-     * @param string $taxonomy The taxonomy slug.
-     * @return array The list of taxonomy term names, or an empty array if none found.
+     * Get and sanitize metadata.
      */
-    private function get_taxonomy_terms( $product_id, $taxonomy ) {
-        // Fetch terms for the specified taxonomy
-        $terms = wp_get_post_terms( $product_id, $taxonomy, [ 'fields' => 'names' ] );
+    private function get_meta_data($product_id, $meta_key) {
+        $meta_value = get_post_meta($product_id, $meta_key, true);
+        return !empty($meta_value) ? sanitize_text_field($meta_value) : null;
+    }
 
-        if ( is_wp_error( $terms ) ) {
-            error_log( 'Error retrieving terms for taxonomy ' . $taxonomy . ': ' . $terms->get_error_message() );
+    /**
+     * Retrieve taxonomy terms and handle errors.
+     */
+    private function get_taxonomy_terms($product_id, $taxonomy) {
+        $terms = wp_get_post_terms($product_id, $taxonomy, ['fields' => 'names']);
+
+        if (is_wp_error($terms)) {
+            error_log('Error retrieving terms for taxonomy ' . esc_html($taxonomy) . ': ' . $terms->get_error_message());
             return [];
         }
 
-        return ! empty( $terms ) ? $terms : [];
+        return !empty($terms) ? $terms : [];
+    }
+
+    /**
+     * Sanitize an array of strings.
+     */
+    private function sanitize_array($array) {
+        return array_map('sanitize_text_field', $array);
     }
 }
 
-// Add Event Organizers taxonomy to WooCommerce REST API response
+// Add Event Organizers to Product API Response
 function ee_add_event_organizers_to_api($response, $product, $request) {
-    // Get the event organizers terms for the product
     $terms = wp_get_post_terms($product->get_id(), 'event_organizer');
-    
+
     if (!is_wp_error($terms) && !empty($terms)) {
-        $response->data['event_organizers'] = array_map(function($term) {
+        $response->data['event_organizers'] = array_map(function ($term) {
             return [
-                'id' => $term->term_id,
-                'name' => $term->name,
-                'slug' => $term->slug,
-                'description' => $term->description,
+                'id' => intval($term->term_id),
+                'name' => esc_html($term->name),
+                'slug' => esc_html($term->slug),
+                'description' => esc_html($term->description),
             ];
         }, $terms);
     } else {
@@ -123,3 +114,6 @@ function ee_add_event_organizers_to_api($response, $product, $request) {
 }
 
 add_filter('woocommerce_rest_prepare_product_object', 'ee_add_event_organizers_to_api', 10, 3);
+
+// Initialize the class
+new EE_API_Integration();
