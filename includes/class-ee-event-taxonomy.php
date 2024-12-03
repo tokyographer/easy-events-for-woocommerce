@@ -56,3 +56,33 @@ class EE_Event_Taxonomy {
         return $term;
     }
 }
+// Register Event Organizers Taxonomy
+function ee_register_event_organizers_taxonomy() {
+    $labels = array(
+        'name'              => _x('Event Organizers', 'taxonomy general name', 'easy-events'),
+        'singular_name'     => _x('Event Organizer', 'taxonomy singular name', 'easy-events'),
+        'search_items'      => __('Search Event Organizers', 'easy-events'),
+        'all_items'         => __('All Event Organizers', 'easy-events'),
+        'parent_item'       => __('Parent Event Organizer', 'easy-events'),
+        'parent_item_colon' => __('Parent Event Organizer:', 'easy-events'),
+        'edit_item'         => __('Edit Event Organizer', 'easy-events'),
+        'update_item'       => __('Update Event Organizer', 'easy-events'),
+        'add_new_item'      => __('Add New Event Organizer', 'easy-events'),
+        'new_item_name'     => __('New Event Organizer Name', 'easy-events'),
+        'menu_name'         => __('Event Organizers', 'easy-events'),
+    );
+
+    $args = array(
+        'hierarchical'      => true, // Category-like behavior
+        'labels'            => $labels,
+        'show_ui'           => true,
+        'show_admin_column' => true,
+        'query_var'         => true,
+        'rewrite'           => array('slug' => 'event-organizer'),
+        'show_in_rest'      => true, // Enable in WooCommerce REST API
+    );
+
+    register_taxonomy('event_organizer', 'product', $args);
+}
+
+add_action('init', 'ee_register_event_organizers_taxonomy');
