@@ -37,16 +37,22 @@ class EE_Event_Taxonomy {
     }
 
     /**
-     * Helper function to fetch Event Location terms.
+     * Fetch Event Location term with caching.
      *
-     * @param int $product_id The product ID.
-     * @return array Array of term names.
+     * @param string $slug The slug of the term.
+     * @return WP_Term|false The term object or false if not found.
      */
-    public static function get_event_location_terms( $product_id ) {
-        $terms = wp_get_post_terms( $product_id, 'event_location', [ 'fields' => 'names' ] );
-        return !is_wp_error( $terms ) && !empty( $terms ) ? $terms : [];
+    public static function get_event_location_term_cached( $slug ) {
+        $cache_key = 'event_location_' . $slug;
+        $term = wp_cache_get( $cache_key, 'event_locations' );
+
+        if ( false === $term ) {
+            $term = get_term_by( 'slug', $slug, 'event_location' );
+            if ( $term ) {
+                wp_cache_set( $cache_key, $term, 'event_locations' );
+            }
+        }
+
+        return $term;
     }
 }
-
-// Initialize the taxonomy.
-new EE_Event_Taxonomy();

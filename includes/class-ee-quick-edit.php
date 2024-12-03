@@ -1,4 +1,3 @@
-
 <?php
 
 class EE_Quick_Edit {
@@ -9,6 +8,46 @@ class EE_Quick_Edit {
         // Register custom column
         add_filter( 'manage_edit-product_columns', [ $this, 'add_event_details_column' ] );
         add_action( 'manage_product_posts_custom_column', [ $this, 'populate_event_details_column' ], 10, 2 );
+    }
+
+    // Add fields to Quick Edit
+    public function add_quick_edit_fields( $column_name, $post_type ) {
+        if ( 'product' !== $post_type || 'event_details' !== $column_name ) {
+            return;
+        }
+        ?>
+        <fieldset class="inline-edit-col-left">
+            <div class="inline-edit-col">
+                <label>
+                    <span class="title"><?php esc_html_e( 'Event Location', 'easy-events' ); ?></span>
+                    <span class="input-text-wrap">
+                        <input type="text" name="_event_location" class="inline-edit-event-location">
+                    </span>
+                </label>
+            </div>
+        </fieldset>
+        <?php
+    }
+
+    // Save Quick Edit Fields
+    public function save_quick_edit_fields( $post_id ) {
+        if ( ! isset( $_POST['ee_quick_edit_nonce'] ) || ! wp_verify_nonce( $_POST['ee_quick_edit_nonce'], 'ee_quick_edit' ) ) {
+            return;
+        }
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE || wp_is_post_revision( $post_id ) ) {
+            return;
+        }
+        if ( ! current_user_can( 'edit_post', $post_id ) ) {
+            return;
+        }
+        if ( isset( $_POST['_event_location'] ) ) {
+            $new_location = sanitize_text_field( $_POST['_event_location'] );
+            $current_location = get_post_meta( $post_id, '_event_location', true );
+
+            if ( $new_location !== $current_location ) {
+                update_post_meta( $post_id, '_event_location', $new_location );
+            }
+        }
     }
 
     // Add custom column to WooCommerce product list
@@ -26,7 +65,7 @@ class EE_Quick_Edit {
 
             $location_name = '';
             if ( $location ) {
-                $term = get_term_by( 'slug', $location, 'event_location' );
+                $term = EE_Event_Taxonomy::get_event_location_term_cached( $location );
                 $location_name = $term ? $term->name : __( 'Unknown', 'easy-events' );
             }
 
@@ -35,39 +74,4 @@ class EE_Quick_Edit {
             echo '<strong>' . __( 'Location:', 'easy-events' ) . '</strong> ' . esc_html( $location_name );
         }
     }
-
-    // Add custom fields to the Quick Edit form
-    public function add_quick_edit_fields( $column_name, $post_type ) {
-        // Use a static variable to ensure the fields are added only once
-        static $added_fields = false;
-
-        if ( $post_type === 'product' && ! $added_fields ) {
-            $added_fields = true;
-            ?>
-            <fieldset class="inline-edit-col-right">
-                <div class="inline-edit-col">
-                    <?php
-                    // Fields removed
-                    ?>
-                </div>
-            </fieldset>
-            <?php
-        }
-    }
-
-    // Save the custom fields from Quick Edit
-    public function save_quick_edit_fields( $post_id ) {
-        if ( isset( $_POST['_event_start_date'] ) ) {
-            update_post_meta( $post_id, '_event_start_date', sanitize_text_field( $_POST['_event_start_date'] ) );
-        }
-        if ( isset( $_POST['_event_end_date'] ) ) {
-            update_post_meta( $post_id, '_event_end_date', sanitize_text_field( $_POST['_event_end_date'] ) );
-        }
-        if ( isset( $_POST['_event_location'] ) ) {
-            $location_slug = sanitize_text_field( $_POST['_event_location'] );
-            wp_set_object_terms( $post_id, $location_slug, 'event_location' );
-        }
-    }
 }
-
-new EE_Quick_Edit();
