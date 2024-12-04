@@ -132,3 +132,50 @@ add_action('woocommerce_rest_insert_product_object', function ($product, $reques
         wp_set_post_terms($product->get_id(), $validated_terms, 'product_cat');
     }
 }, 10, 3);
+
+/**
+ * Add event attributes to products.
+ */
+function ee_add_event_attributes_to_products($response, $object, $request) {
+    // Add Event Start Date
+    $start_date = wc_get_product_terms($object->get_id(), 'pa_event_start_date', ['fields' => 'names']);
+    if (!empty($start_date)) {
+        $response->data['event_start_date'] = $start_date[0];
+    } else {
+        $response->data['event_start_date'] = null;
+    }
+
+    // Add Event End Date
+    $end_date = wc_get_product_terms($object->get_id(), 'pa_event_end_date', ['fields' => 'names']);
+    if (!empty($end_date)) {
+        $response->data['event_end_date'] = $end_date[0];
+    } else {
+        $response->data['event_end_date'] = null;
+    }
+
+    return $response;
+}
+add_filter('woocommerce_rest_prepare_product_object', 'ee_add_event_attributes_to_products', 10, 3);
+
+/**
+ * Add event attributes to orders.
+ */
+function ee_add_event_attributes_to_orders($response, $object, $request) {
+    $line_items = $response->data['line_items'];
+    foreach ($line_items as &$item) {
+        $product = wc_get_product($item['product_id']);
+        if ($product) {
+            // Add Event Start Date
+            $start_date = wc_get_product_terms($product->get_id(), 'pa_event_start_date', ['fields' => 'names']);
+            $item['event_start_date'] = !empty($start_date) ? $start_date[0] : null;
+
+            // Add Event End Date
+            $end_date = wc_get_product_terms($product->get_id(), 'pa_event_end_date', ['fields' => 'names']);
+            $item['event_end_date'] = !empty($end_date) ? $end_date[0] : null;
+        }
+    }
+    $response->data['line_items'] = $line_items;
+
+    return $response;
+}
+add_filter('woocommerce_rest_prepare_order_object', 'ee_add_event_attributes_to_orders', 10, 3);
