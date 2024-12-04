@@ -37,8 +37,10 @@ add_action( 'plugins_loaded', function () {
         new EE_Quick_Edit(); // Quick Edit functionality for events.
         new EE_WooCommerce_Hooks(); // Initialize EE_WooCommerce_Hooks.
              // Initialize taxonomy and custom fields classes.
-             new EE_Event_Taxonomy(); // Handles event taxonomy.
-             new EE_Event_Fields(); // Handles custom event fields
+        new EE_Event_Taxonomy(); // Handles event taxonomy.
+        new EE_Event_Fields(); // Handles custom event fields
+		new EE_Zapier_API(); // Handles Zapier API Create Product
+		new EE_PRODUCT_IMPORT_EXPORT();
     }
 } );
 
