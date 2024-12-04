@@ -41,6 +41,8 @@ add_action( 'plugins_loaded', function () {
         new EE_Event_Fields(); // Handles custom event fields
 		new EE_Zapier_API(); // Handles Zapier API Create Product
 		new EE_PRODUCT_IMPORT_EXPORT();
+        new EE_REGISTER_ATTRIBUTES();
+
     }
 } );
 
