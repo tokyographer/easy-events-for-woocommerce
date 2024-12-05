@@ -13,8 +13,8 @@ class EE_Event_Fields {
 
         // Ensure the product is of type 'event'.
         if ( 'event' === $product->get_type() ) {
-            $start_date = get_post_meta( $product->get_id(), '_event_start_date', true );
-            $end_date   = get_post_meta( $product->get_id(), '_event_end_date', true );
+            $start_date = wc_get_product_terms( $product->get_id(), 'pa_event_start_date', ['fields' => 'names'] );
+            $end_date   = wc_get_product_terms( $product->get_id(), 'pa_event_end_date', ['fields' => 'names'] );
 
             // Retrieve event location terms.
             $event_locations = wp_get_post_terms( $product->get_id(), 'event_location', ['fields' => 'names'] );
