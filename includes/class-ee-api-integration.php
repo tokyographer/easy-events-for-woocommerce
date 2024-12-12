@@ -1,102 +1,66 @@
 <?php
 
 class EE_API_Integration {
+
     public function __construct() {
-        // Hook to include event data and categories in product API responses
-        add_filter( 'woocommerce_rest_prepare_product_object', [ $this, 'add_event_and_category_data_to_product_api' ], 10, 3 );
-
-        // Hook to include product categories in order API responses
-        add_filter( 'woocommerce_rest_prepare_shop_order_object', [ $this, 'add_event_and_category_data_to_order_api' ], 10, 3 );
+        add_filter('woocommerce_rest_prepare_product_object', array($this, 'enhance_product_api_response'), 10, 3);
+        add_filter('woocommerce_rest_prepare_shop_order_object', array($this, 'enhance_order_api_response'), 10, 3);
     }
 
-    /**
-     * Add event data and product categories to WooCommerce REST API product responses.
-     *
-     * @param WP_REST_Response $response The original API response.
-     * @param WC_Product $product The WooCommerce product object.
-     * @param WP_REST_Request $request The current request object.
-     * @return WP_REST_Response The modified API response.
-     */
-    public function add_event_and_category_data_to_product_api( $response, $product, $request ) {
-        // Fetch event data
-        $event_data = [
-            'event_start_date' => $this->get_meta_data( $product->get_id(), '_event_start_date' ),
-            'event_end_date'   => $this->get_meta_data( $product->get_id(), '_event_end_date' ),
-            'event_location'   => $this->get_taxonomy_terms( $product->get_id(), 'event_location' ),
-        ];
-
-        // Fetch product categories
-        $product_categories = $this->get_taxonomy_terms( $product->get_id(), 'product_cat' );
-
-        // Debug: Log product categories
-        error_log( 'Product API: Categories for Product ID ' . $product->get_id() . ': ' . print_r( $product_categories, true ) );
-
-        // Add event data and categories to the API response
-        $response->data['event_data'] = $event_data;
-        $response->data['categories'] = $product_categories;
-
+    public function enhance_product_api_response($response, $product, $request) {
+        $product_id = $product->get_id();
+        $response->data['event_data'] = array(
+            'event_start_date' => $this->get_event_start_date($product_id),
+            'event_end_date' => $this->get_event_end_date($product_id),
+            'event_location' => $this->get_event_location($product_id),
+            'categories' => $this->get_taxonomy_terms($product_id, 'product_cat'),
+            'event_organizers' => $this->get_taxonomy_terms($product_id, 'event_organizer')
+        );
         return $response;
     }
 
-    /**
-     * Add product categories to WooCommerce REST API order line items.
-     *
-     * @param WP_REST_Response $response The original API response.
-     * @param WC_Order $order The WooCommerce order object.
-     * @param WP_REST_Request $request The current request object.
-     * @return WP_REST_Response The modified API response.
-     */
-    public function add_event_and_category_data_to_order_api( $response, $order, $request ) {
-        $line_items = $response->data['line_items'];
+    public function enhance_order_api_response($response, $order, $request) {
+        // Add wpml_language metadata to the response
+        $order_id = $order->get_id();
+        $response->data['wpml_language'] = get_post_meta($order_id, 'wpml_language', true);
 
-        // Iterate over line items and append product categories
-        foreach ( $line_items as &$item ) {
+        // Enhance line items with event data
+        foreach ($response->data['line_items'] as &$item) {
             $product_id = $item['product_id'];
-
-            // Fetch product categories
-            $categories = $this->get_taxonomy_terms( $product_id, 'product_cat' );
-
-            // Debugging
-            error_log( 'Order API: Categories for Product ID ' . $product_id . ': ' . print_r( $categories, true ) );
-
-            // Add categories to the line item
-            $item['categories'] = ! empty( $categories ) ? $categories : [];
+            $item['event_data'] = array(
+                'event_start_date' => $this->get_event_start_date($product_id),
+                'event_end_date' => $this->get_event_end_date($product_id),
+                'event_location' => $this->get_event_location($product_id),
+                'categories' => $this->get_taxonomy_terms($product_id, 'product_cat'),
+                'event_organizers' => $this->get_taxonomy_terms($product_id, 'event_organizer')
+            );
         }
-
-        // Update the response with modified line items
-        $response->data['line_items'] = $line_items;
-
         return $response;
     }
 
-    /**
-     * Retrieve metadata with validation.
-     *
-     * @param int $product_id The product ID.
-     * @param string $meta_key The meta key to retrieve.
-     * @return mixed|null The meta value, or null if not found.
-     */
-    private function get_meta_data( $product_id, $meta_key ) {
-        $meta_value = get_post_meta( $product_id, $meta_key, true );
-        return ! empty( $meta_value ) ? $meta_value : null;
+    private function get_event_start_date($product_id) {
+        $start_date = get_post_meta($product_id, 'Event Start Date', true);
+        return $start_date ? $start_date : '';
     }
 
-    /**
-     * Retrieve taxonomy terms with error handling.
-     *
-     * @param int $product_id The product ID.
-     * @param string $taxonomy The taxonomy slug.
-     * @return array The list of taxonomy term names, or an empty array if none found.
-     */
-    private function get_taxonomy_terms( $product_id, $taxonomy ) {
-        // Fetch terms for the specified taxonomy
-        $terms = wp_get_post_terms( $product_id, $taxonomy, [ 'fields' => 'names' ] );
+    private function get_event_end_date($product_id) {
+        $end_date = get_post_meta($product_id, 'Event End Date', true);
+        return $end_date ? $end_date : '';
+    }
 
-        if ( is_wp_error( $terms ) ) {
-            error_log( 'Error retrieving terms for taxonomy ' . $taxonomy . ': ' . $terms->get_error_message() );
-            return [];
+    private function get_event_location($product_id) {
+        $location = get_post_meta($product_id, 'Event Location', true);
+        return $location ? $location : '';
+    }
+
+    private function get_taxonomy_terms($product_id, $taxonomy) {
+        $terms = wp_get_post_terms($product_id, $taxonomy);
+        $term_names = array();
+        foreach ($terms as $term) {
+            $term_names[] = $term->name;
         }
-
-        return ! empty( $terms ) ? $terms : [];
+        return $term_names;
     }
 }
+
+new EE_API_Integration();
