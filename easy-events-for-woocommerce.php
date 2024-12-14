@@ -28,7 +28,6 @@ ee_load_includes();
 add_action( 'plugins_loaded', function () {
     if ( class_exists( 'WooCommerce' ) ) {
         // Initialize specific plugin classes.
-        new EE_Event_Product_Type(); // Custom product type for events.
         new EE_Admin_Columns(); // Admin product columns for event details.
         new EE_Cart_Checkout(); // Display event details in cart and checkout.
         new EE_Shortcodes(); // Shortcodes for events.
