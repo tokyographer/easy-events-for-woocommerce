@@ -12,6 +12,11 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit; // Exit if accessed directly.
 }
 
+// Load translations on the `init` action
+add_action('init', function () {
+    load_plugin_textdomain('easy-events', false, dirname(plugin_basename(__FILE__)) . '/languages');
+});
+
 // Dynamically include all files from the `includes/` directory.
 function ee_load_includes() {
     foreach ( glob( plugin_dir_path( __FILE__ ) . 'includes/*.php' ) as $file ) {
@@ -27,19 +32,39 @@ ee_load_includes();
 // Initialize all classes after WooCommerce is loaded.
 add_action( 'plugins_loaded', function () {
     if ( class_exists( 'WooCommerce' ) ) {
-        // Initialize specific plugin classes.
-        new EE_Admin_Columns(); // Admin product columns for event details.
-        new EE_Cart_Checkout(); // Display event details in cart and checkout.
-        new EE_Shortcodes(); // Shortcodes for events.
-        new EE_API_Integration(); // Integrate event data into WooCommerce API.
-        new EE_Frontend_Display(); // Frontend display for events.
-        new EE_Quick_Edit(); // Quick Edit functionality for events.
-        new EE_WooCommerce_Hooks(); // Initialize EE_WooCommerce_Hooks.
-             // Initialize taxonomy and custom fields classes.
-             new EE_Event_Taxonomy(); // Handles event taxonomy.
-             new EE_Event_Fields(); // Handles custom event fields
+        // Singleton Classes
+        if ( class_exists( 'EE_Event_Fields' ) ) {
+            EE_Event_Fields::get_instance();
+        }
+        if ( class_exists( 'EE_Event_Taxonomy' ) ) {
+            EE_Event_Taxonomy::get_instance();
+        }
+
+        // Non-Singleton Classes
+        if ( class_exists( 'EE_Admin_Columns' ) ) {
+            new EE_Admin_Columns();
+        }
+        if ( class_exists( 'EE_API_Integration' ) ) {
+            new EE_API_Integration(); // Changed to direct instantiation
+        }
+        if ( class_exists( 'EE_Shortcodes' ) ) {
+            new EE_Shortcodes();
+        }
+        if ( class_exists( 'EE_Cart_Checkout' ) ) {
+            new EE_Cart_Checkout();
+        }
+        if ( class_exists( 'EE_Frontend_Display' ) ) {
+            new EE_Frontend_Display();
+        }
+        if ( class_exists( 'EE_Quick_Edit' ) ) {
+            new EE_Quick_Edit();
+        }
+    } else {
+        add_action( 'admin_notices', function () {
+            echo '<div class="error"><p>' . esc_html__( 'Easy Events for WooCommerce requires WooCommerce to be active.', 'easy-events' ) . '</p></div>';
+        });
     }
-} );
+});
 
 // Enqueue the JavaScript file for the Quick Edit feature.
 add_action( 'admin_enqueue_scripts', function () {
