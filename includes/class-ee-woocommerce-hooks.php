@@ -89,8 +89,8 @@ class EE_WooCommerce_Hooks {
     // Add event data to API response.
     public function add_event_data_to_api( $response, $product, $request ) {
         $event_data = [
-            'event_start_date' => get_post_meta( $product->get_id(), '_event_start_date', true ),
-            'event_end_date'   => get_post_meta( $product->get_id(), '_event_end_date', true ),
+            'event_start_date' => wc_get_product_terms( $product->get_id(), 'pa_event_start_date', ['fields' => 'names'] ),
+            'event_end_date'   => wc_get_product_terms( $product->get_id(), 'pa_event_end_date', ['fields' => 'names'] ),
             'event_location'   => wp_get_post_terms( $product->get_id(), 'event_location', ['fields' => 'names'] ),
         ];
 

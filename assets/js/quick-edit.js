@@ -3,8 +3,7 @@
         // Listen for Quick Edit button click
         $(document).on('click', '.editinline', function () {
             // Extract Post ID from the row's ID attribute
-            var postId = $(this).closest('tr').attr('id').replace('post-', '');
-
+            var postId = $(this).closest('tr').attr('id')?.replace('post-', '');
             if (!postId) {
                 console.error('Post ID not found for Quick Edit operation');
                 return;
@@ -20,47 +19,86 @@
             }
 
             // Populate Event Start Date
-            var startDateElement = rowElement.find('.column-event_start_date');
-            if (startDateElement.length === 0) {
-                console.warn('Start Date column not found for Post ID:', postId);
-            } else {
-                var startDate = startDateElement.text().trim();
-                // $('input[name="_event_start_date"]').val(startDate || '');
-                console.log('Start Date:', startDate || 'Not Found');
-            }
+            populateField(
+                rowElement,
+                '.column-event_start_date',
+                'input[name="_event_start_date"]',
+                'Event Start Date'
+            );
 
             // Populate Event End Date
-            var endDateElement = rowElement.find('.column-event_end_date');
-            if (endDateElement.length === 0) {
-                console.warn('End Date column not found for Post ID:', postId);
-            } else {
-                var endDate = endDateElement.text().trim();
-              //  $('input[name="_event_end_date"]').val(endDate || '');
-                console.log('End Date:', endDate || 'Not Found');
-            }
+            populateField(
+                rowElement,
+                '.column-event_end_date',
+                'input[name="_event_end_date"]',
+                'Event End Date'
+            );
 
             // Populate Event Location
-            var locationElement = rowElement.find('.taxonomy-event_location a');
-            if (locationElement.length === 0) {
-                console.warn('Location column not found for Post ID:', postId);
-            } else {
-                var eventLocation = locationElement.text().trim();
-                console.log('Event Location:', eventLocation || 'Not Found');
+            populateDropdown(
+                rowElement,
+                '.taxonomy-event_location a',
+                'select[name="_event_location"]',
+                'Event Location'
+            );
+        });
 
-                // Update dropdown
-                var locationDropdown = $('select[name="_event_location"]');
-                if (locationDropdown.length === 0) {
-                    console.error('Location dropdown not found in Quick Edit form');
+        /**
+         * Populate a text field in the Quick Edit form.
+         * @param {Object} rowElement - The jQuery object representing the table row.
+         * @param {string} columnSelector - The selector for the column containing the value.
+         * @param {string} inputSelector - The selector for the input field in the Quick Edit form.
+         * @param {string} fieldName - The name of the field (for debugging).
+         */
+        function populateField(rowElement, columnSelector, inputSelector, fieldName) {
+            var columnElement = rowElement.find(columnSelector);
+            if (columnElement.length === 0) {
+                console.warn(`${fieldName} column not found for Post ID`);
+                return;
+            }
+
+            var fieldValue = columnElement.text().trim();
+            if (!fieldValue) {
+                console.warn(`${fieldName} value not found for Post ID`);
+            } else {
+                console.log(`${fieldName}:`, fieldValue);
+                var inputElement = $(inputSelector);
+                if (inputElement.length === 0) {
+                    console.error(`${fieldName} input field not found in Quick Edit form`);
                 } else {
-                    locationDropdown.find('option').each(function () {
-                        if ($(this).text().trim() === eventLocation) {
-                            $(this).prop('selected', true);
-                        } else {
-                            $(this).prop('selected', false);
-                        }
+                    inputElement.val(fieldValue);
+                }
+            }
+        }
+
+        /**
+         * Populate a dropdown in the Quick Edit form.
+         * @param {Object} rowElement - The jQuery object representing the table row.
+         * @param {string} columnSelector - The selector for the column containing the value.
+         * @param {string} dropdownSelector - The selector for the dropdown in the Quick Edit form.
+         * @param {string} fieldName - The name of the field (for debugging).
+         */
+        function populateDropdown(rowElement, columnSelector, dropdownSelector, fieldName) {
+            var columnElement = rowElement.find(columnSelector);
+            if (columnElement.length === 0) {
+                console.warn(`${fieldName} column not found for Post ID`);
+                return;
+            }
+
+            var fieldValue = columnElement.text().trim();
+            if (!fieldValue) {
+                console.warn(`${fieldName} value not found for Post ID`);
+            } else {
+                console.log(`${fieldName}:`, fieldValue);
+                var dropdown = $(dropdownSelector);
+                if (dropdown.length === 0) {
+                    console.error(`${fieldName} dropdown not found in Quick Edit form`);
+                } else {
+                    dropdown.find('option').each(function () {
+                        $(this).prop('selected', $(this).text().trim() === fieldValue);
                     });
                 }
             }
-        });
+        }
     });
 })(jQuery);
