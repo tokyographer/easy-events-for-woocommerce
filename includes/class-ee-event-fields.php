@@ -54,28 +54,6 @@ class EE_Event_Fields {
             'desc_tip'    => true,
         ]);
 
-        // Event Location (Taxonomy Dropdown)
-        $event_locations = wp_get_post_terms($post->ID, 'event_location', ['fields' => 'ids']);
-        $event_locations = is_array($event_locations) ? $event_locations : [];
-        woocommerce_wp_select([
-            'id'          => 'event_location',
-            'label'       => __('Event Location', 'easy-events'),
-            'options'     => $this->get_taxonomy_terms('event_location'),
-            'description' => __('Select the location of the event.', 'easy-events'),
-            'value'       => reset($event_locations),
-        ]);
-
-        // Event Organizer (Taxonomy Dropdown)
-        $event_organizers = wp_get_post_terms($post->ID, 'event_organizer', ['fields' => 'ids']);
-        $event_organizers = is_array($event_organizers) ? $event_organizers : [];
-        woocommerce_wp_select([
-            'id'          => 'event_organizer',
-            'label'       => __('Event Organizer', 'easy-events'),
-            'options'     => $this->get_taxonomy_terms('event_organizer'),
-            'description' => __('Select the organizer of the event.', 'easy-events'),
-            'value'       => reset($event_organizers),
-        ]);
-
         echo '</div>';
     }
 
@@ -108,15 +86,6 @@ class EE_Event_Fields {
             wc_add_notice(__('Event Start Date must be before Event End Date.', 'easy-events'), 'error');
         }
 
-        // Save Event Location as a taxonomy term
-        if (isset($_POST['event_location'])) {
-            wp_set_post_terms($post_id, intval($_POST['event_location']), 'event_location');
-        }
-
-        // Save Event Organizer as a taxonomy term
-        if (isset($_POST['event_organizer'])) {
-            wp_set_post_terms($post_id, intval($_POST['event_organizer']), 'event_organizer');
-        }
     }
 
     /**
